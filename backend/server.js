@@ -9,8 +9,13 @@ app.use(cors());
 
 const userRoute = require("./routes/userRoute");
 app.use(express.json());
+// Default route (optional)
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
 
 
+// Connect to MongoDB and start server
 mongoose
   .connect(process.env.URI)
   .then(()=> {
