@@ -1,34 +1,34 @@
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const serverless = require("serverless-http");
+const cors = require("cors");
+
+// Load environment variables
 dotenv.config();
 
-const cors =require("cors");
+// Create Express app
+const app = express();
 app.use(cors());
-
-const userRoute = require("./routes/userRoute");
 app.use(express.json());
-// Default route (optional)
+
+// MongoDB connection (run once on cold start)
+mongoose
+  .connect(process.env.URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((error) => console.error("MongoDB connection error:", error));
+
+// Routes
+const userRoute = require("./routes/userRoute");
+app.use("/api/users", userRoute); // Add a base path
+
+// Default route
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-
-// Connect to MongoDB and start server
-mongoose
-  .connect(process.env.URI)
-  .then(()=> {
-    console.log("connected successfully");
-    app.listen(process.env.PORT || 8000 ,(err)=>{
-        if(err) console.log(err);
-        console.log("running successfully at",process.env.PORT);
-    }); 
- 
-  })
-  .catch((error) =>{
-    console.log("error",error);
-  });
-
-app.use(userRoute);
+// ✅ Export the handler for Vercel
+module.exports.handler = serverless(app);
